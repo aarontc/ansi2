@@ -1,4 +1,4 @@
-= sc-ansi
+= ANSI2
 
 Handles every aspect (that I could think of) of dealing with ANSI escape sequences. You can produce ANSI codes easily
 enough:
@@ -52,3 +52,4 @@ your own console application and you want to interpret, say, the UP arrow for hi
 == Copyright
 
 Copyright (c) 2010 Colin MacKenzie IV. See LICENSE for details.
+Copyright © 2015 Aaron Ten Clay.
