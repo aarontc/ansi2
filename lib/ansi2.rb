@@ -52,10 +52,10 @@ module ANSI2
 			dynamically_defined_methods.clear
 			arities.clear
 
-			load File.join(File.dirname(__FILE__), "ansi/cursor.rb")
-			load File.join(File.dirname(__FILE__), "ansi/display.rb")
-			load File.join(File.dirname(__FILE__), "ansi/color.rb")
-			load File.join(File.dirname(__FILE__), "ansi/vt100.rb")
+			load File.join(File.dirname(__FILE__), "ansi2/cursor.rb")
+			load File.join(File.dirname(__FILE__), "ansi2/display.rb")
+			load File.join(File.dirname(__FILE__), "ansi2/color.rb")
+			load File.join(File.dirname(__FILE__), "ansi2/vt100.rb")
 		end
 
 		def dynamically_defined_methods
@@ -156,7 +156,7 @@ module ANSI2
 				rbcode = <<-end_code
           def #{name}(*args, &block)                                      # def red(*args, &block)
             args << block if block_given?                                 #   args << block if block_given?
-            ANSI.codes[#{code_index}].send(#{name.inspect}, *args)        #   ANSI.code[1].send('red', *args)
+            ANSI2.codes[#{code_index}].send(#{name.inspect}, *args)        #   ANSI.code[1].send('red', *args)
           end                                                             # end
 				end_code
 
@@ -167,6 +167,8 @@ module ANSI2
 		end
 	end
 end
+
+require_relative 'ansi2/version'
 
 require_relative 'ansi2/code'
 require_relative 'ansi2/core_ext/object'

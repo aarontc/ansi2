@@ -1,8 +1,8 @@
 require_relative 'test_helper'
 
-require_relative '../lib/ansi'
+require_relative '../lib/ansi2'
 
-class TestANSI < Minitest::Test
+class TestANSI2 < Minitest::Test
 	def setup
 		#ANSI.reset!
 	end
