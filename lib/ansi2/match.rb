@@ -1,4 +1,4 @@
-module ANSI
+module ANSI2
 	class Match
 		attr_reader :codes, :args
 
@@ -16,7 +16,7 @@ module ANSI
 		end
 
 		def inspect
-			"#<ANSI2::Match(#{@codes.join("|")}) args=#{@args.inspect}>"
+			"#<ANSI2::Match(#{@codes.join('|')}) args=#{@args.inspect}>"
 		end
 
 		alias to_s inspect

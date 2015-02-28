@@ -12,7 +12,7 @@ class TestColor < Minitest::Test
 	end
 
 	def test_add_single_fg_color_to_symbol
-		assert_Equal red + 'a_string!' + reset_color, :a_string!.red
+		assert_equal red + 'a_string!' + reset_color, :a_string!.red
 	end
 
 	# context "a single attribute color" do

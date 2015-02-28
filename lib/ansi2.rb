@@ -52,10 +52,10 @@ module ANSI2
 			dynamically_defined_methods.clear
 			arities.clear
 
-			load File.join(File.dirname(__FILE__), "ansi2/cursor.rb")
-			load File.join(File.dirname(__FILE__), "ansi2/display.rb")
-			load File.join(File.dirname(__FILE__), "ansi2/color.rb")
-			load File.join(File.dirname(__FILE__), "ansi2/vt100.rb")
+			load File.join(File.dirname(__FILE__), 'ansi2/cursor.rb')
+			load File.join(File.dirname(__FILE__), 'ansi2/display.rb')
+			load File.join(File.dirname(__FILE__), 'ansi2/color.rb')
+			load File.join(File.dirname(__FILE__), 'ansi2/vt100.rb')
 		end
 
 		def dynamically_defined_methods
@@ -75,7 +75,7 @@ module ANSI2
 
 		def test_sequence(arity, &block)
 			args = []
-			arity.times { args << "{?}" } if arity
+			arity.times { args << '{?}' } if arity
 			begin
 				return block.call(*args)
 			rescue TypeError => err
@@ -96,7 +96,7 @@ module ANSI2
 		def recognize(str)
 			match = nil
 			String::ANSI2_ESCAPE_SEQUENCE_RX =~ str
-			if $~ && args = $~[2].split(";")
+			if $~ && args = $~[2].split(';')
 				codes.uniq.each do |code|
 					_args = args.dup
 					begin
@@ -171,7 +171,6 @@ end
 require_relative 'ansi2/version'
 
 require_relative 'ansi2/code'
-require_relative 'ansi2/core_ext/object'
 require_relative 'ansi2/core_ext/string'
 require_relative 'ansi2/match'
 

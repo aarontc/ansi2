@@ -4,7 +4,7 @@ require_relative '../lib/ansi2'
 
 class TestANSI2 < Minitest::Test
 	def setup
-		#ANSI.reset!
+		ANSI.reset!
 	end
 
 	def test_works_for_blink

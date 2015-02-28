@@ -70,7 +70,7 @@ module ANSI2
 			alias define define_with_extension #:nodoc:
 		end
 
-		ANSI2.define("set_color", "color") do |*values|
+		ANSI2.define('set_color', 'color') do |*values|
 			block = values.last.kind_of?(Proc) ? values.pop : nil
 			colr = "\e[#{values.join(";")}m"
 			if block
@@ -79,14 +79,14 @@ module ANSI2
 				colr
 			end
 		end
-		ANSI2.define("reset_color", "reset") { color(0) }
+		ANSI2.define('reset_color', 'reset') { color(0) }
 
 		# Various combinations of colors and text attributes:
 		#   bold, underscore, blink, reverse_video, concealed
 		#   red, fg_red, bg_red, red_on_red, bold_red, bold_red_on_red
 		# etc.
 		colors = %w(black red green yellow blue magenta cyan white)
-		attrs = {"regular" => 0, "bold" => 1, "underscore" => 4, "blink" => 5, "reverse_video" => 7, "concealed" => 8}
+		attrs = {'regular' => 0, 'bold' => 1, 'underscore' => 4, 'blink' => 5, 'reverse_video' => 7, 'concealed' => 8}
 
 		attrs.each do |attr_name, attr_value|
 			ANSI2.define(attr_name) { |block| color(attr_value, &block) } # 0-8

@@ -30,12 +30,12 @@ module ANSI2
 	#   unwrap - turns off word wrapping.
 	#
 	module Display
-		ANSI2.define("erase_display", "clear_display", "clear", "cls") { "\e[2J" }
-		ANSI2.define("erase_line", "clear_line", "clr") { "\e[K" }
+		ANSI2.define('erase_display', 'clear_display', 'clear', 'cls') { "\e[2J" }
+		ANSI2.define('erase_line', 'clear_line', 'clr') { "\e[K" }
 
 		# Various set and unset/reset methods for display modes.
 		#   set_320x200, unset_320x200, reset_320x200, etc.
-		{"set_" => 'h', '' => 'h', "unset_" => 'l', "reset_" => 'l'}.each do |prefix, symbol|
+		{'set_' => 'h', '' => 'h', 'unset_' => 'l', 'reset_' => 'l'}.each do |prefix, symbol|
 			ANSI2.define("#{prefix}mode") { |value| "\e[=#{value || 0}#{symbol}" }
 
 			%w(40x25m 40x25 80x25m 80x25 320x200_4 320x200m 640x200m).each_with_index do |mode, index|
@@ -48,7 +48,7 @@ module ANSI2
 				ANSI2.define("#{prefix}#{mode}") { send("#{prefix}mode", index+13) }
 			end
 		end
-		ANSI2.define("wrap") { set_mode(7) }
-		ANSI2.define("unwrap") { unset_mode(7) }
+		ANSI2.define('wrap') { set_mode(7) }
+		ANSI2.define('unwrap') { unset_mode(7) }
 	end
 end
