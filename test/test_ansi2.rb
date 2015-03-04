@@ -20,23 +20,4 @@ class TestANSI2 < Minitest::Test
 		assert_equal "\e[{?}A", ANSI2.generate_sequence('move_up')
 	end
 
-	def test_define_new_ansi_code_with_no_arguments
-		ANSI2.define(:bizarro) { "\e[asdf" }
-		assert_equal "\e[asdf", ANSI2.bizarro
-	end
-
-	def test_new_code_accepts_0_arguments
-		ANSI2.define(:bizarro) { |a| "\e[#{a}a" }
-		assert_equal "\e[a", ANSI2.bizarro
-	end
-
-	def test_new_code_accepts_1_argument
-		ANSI2.define(:bizarro) { |a| "\e[#{a}a" }
-		assert_equal "\e[1a", ANSI2.bizarro(1)
-	end
-
-	def test_new_code_raises_with_2_arguments
-		ANSI2.define(:bizarro) { |a| "\e[#{a}a" }
-		assert_raises(ArgumentError) { ANSI2.bizarro(1, 2) }
-	end
 end

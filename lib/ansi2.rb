@@ -104,31 +104,21 @@ module ANSI2
 		# is expected to use the notation "{?}" for each parameter instead of a real value. For
 		# instance, the sequence which would return MOVE_UP would look like: "\e[{?}A" instead of
 		# "\e[1A"
-		# def recognize(str)
-		# 	match = nil
-		# 	String::ANSI2_ESCAPE_SEQUENCE_RX =~ str
-		# 	if $~ && args = $~[2].split(';')
-		# 		codes.uniq.each do |code|
-		# 			_args = args.dup
-		# 			begin
-		# 				result = code.generate(*_args)
-		# 			rescue TypeError => err
-		# 				if err.message =~ /\(expected Proc\)/ && !_args.empty?
-		# 					_args.pop
-		# 					retry
-		# 				end
-		# 				next
-		# 			end
-		#
-		# 			if result == str
-		# 				match ||= ANSI2::Match.new(_args)
-		# 				match.codes << code
-		# 			end
-		# 		end
-		# 	end
-		# 	return match if match
-		# 	raise "ANSI sequence not found: #{str.inspect}"
-		# end
+		def recognize(str)
+			String::ANSI2_ESCAPE_SEQUENCE_RX =~ str
+			puts "Looking for something that matches: #{str.inspect}"
+			if $~ && args = $~[2].split(';')
+				puts "Finding a code for: #{args.inspect}"
+				codes.uniq.each do |code|
+					code.generate_all(*args).each do |g|
+						if g == str
+							return code
+						end
+					end
+				end
+			end
+			raise "ANSI sequence not found: #{str.inspect}"
+		end
 
 
 		# Aliases a specific code with the given names. This way you don't need to redefine a new constant, so performance

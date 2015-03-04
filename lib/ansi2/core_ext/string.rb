@@ -4,7 +4,7 @@ require_relative '../color'
 
 class String
 	prefix = "[]?><()#/"
-	ANSI2_ESCAPE_SEQUENCE_RX = /\e([#{Regexp::escape prefix}]?)([0-9;\{\?\}]*)([0-#{Regexp::escape 176.chr}])/
+	ANSI2_ESCAPE_SEQUENCE_RX = /\e(?:[#{Regexp::escape prefix}]?)(?:[0-9;\{\?\}]*)(?:[0-#{Regexp::escape 176.chr}])/
 
 	# returns an array listing all detected ANSI sequences in self. These are instances of ANSI::Code.
 	def ansi_sequences
@@ -12,6 +12,12 @@ class String
 			ANSI2.recognize match[0]
 		end
 	end
+
+
+	def ansi2_raw_matches
+		scan ANSI2_ESCAPE_SEQUENCE_RX
+	end
+
 
 	# Creates a new String that is a copy of this String. Takes a block
 	# which will receive each occurrance of an ANSI escape sequence; the
@@ -27,7 +33,7 @@ class String
 	#   #=> "(red)hello(normal)"
 	#
 	def ansi_replace
-		copy = self.dup
+		copy = dup
 		ANSI2_ESCAPE_SEQUENCE_RX.each_match(copy).collect do |match|
 			ansi_match = ANSI2.recognize match[0]
 			result = yield ansi_match

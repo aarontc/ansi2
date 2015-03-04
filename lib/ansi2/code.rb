@@ -2,6 +2,21 @@ module ANSI2
 	# The object that calling ANSI2.define(...) actually creates. This is managed internally and you should rarely
 	# have to interface with it directly.
 	class Code
+		class << self
+			def generate_all(*args, &block)
+				results = []
+				methods(false).each do |m|
+					begin
+						puts "trying method #{m} with args #{args.inspect}"
+						meth = method m
+						results << meth.call(*args, &block)
+						puts "GOT IT"
+					rescue
+					end
+				end
+				results
+			end
+		end
 # 		attr_reader :method_name, :arity, :block
 #
 # 		# The name of this code. This is assigned to the first non-nil method name that this object uses.
