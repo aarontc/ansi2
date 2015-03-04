@@ -36,142 +36,163 @@
 # Obviously, the ability to define these sequences (with or without blocks) is probably more useful to me than to you
 # -- but it's in there if you need it.
 #
+require_relative 'ansi2/version'
+
+require_relative 'ansi2/code'
+require_relative 'ansi2/color'
+require_relative 'ansi2/cursor'
+require_relative 'ansi2/display'
+#require_relative 'ansi2/vt100'
+
+require_relative 'ansi2/core_ext/object'
+require_relative 'ansi2/core_ext/regexp'
+require_relative 'ansi2/core_ext/string'
+
 module ANSI2
 	class << self
 		def codes
 			@codes ||= []
 		end
 
-		# Causes ANSI to unload all generated methods and wipe out the #codes index, and then reload
-		# its internal files. The codes stored in #codes themselves are unaffected, though they will
-		# float into oblivion and be processed by the garbage collector if you haven't captured them
-		# in some way.
-		def reset!
-			codes.clear
-			dynamically_defined_methods.each { |c| undef_method(c) }
-			dynamically_defined_methods.clear
-			arities.clear
 
-			load File.join(File.dirname(__FILE__), 'ansi2/cursor.rb')
-			load File.join(File.dirname(__FILE__), 'ansi2/display.rb')
-			load File.join(File.dirname(__FILE__), 'ansi2/color.rb')
-			load File.join(File.dirname(__FILE__), 'ansi2/vt100.rb')
-		end
-
-		def dynamically_defined_methods
-			@dynamically_defined_methods ||= []
-		end
-
-		# The arity of the block that was used to define a particular method.
-		def arities
-			@arities ||= {}
-		end
-
-		# Dynamically generates an escape sequence for the specified method name. Arguments are replaced
-		# with "{?}".
-		def generate_sequence(method_name)
-			test_sequence(arities[method_name]) { |*args| send(method_name, *args) }
-		end
-
-		def test_sequence(arity, &block)
-			args = []
-			arity.times { args << '{?}' } if arity
-			begin
-				return block.call(*args)
-			rescue TypeError => err
-				if err.message =~ /\(expected Proc\)/
-					args.pop
-					args << nil
-					retry
-				else
-					raise err
+		def method_missing(method_name, *args, &block)
+			candidate_wrong_arity = []
+			@codes.each do |code|
+				if code.respond_to? method_name
+					method = code.method method_name
+					required_param_count = method.parameters.select{|p| p[0] == :req}.count
+					candidate_wrong_arity << code
+					return method.call *args, &block if args.length >= required_param_count
 				end
 			end
+			block_message = " { #{block.inspect} }" if block
+			error_message = "No method with same name and arity as '#{method_name}(#{args.join(', ')})#{block_message}' - possible candidates: #{candidate_wrong_arity.inspect}"
+			raise NoMethodError.new(error_message, method_name, args)
 		end
+
+
+		def discover_codes(base_class = ANSI2::Code)
+			base_class.ansi2_extension__subclasses.each do |klass|
+				@codes << klass
+			end
+		end
+
+		# # Dynamically generates an escape sequence for the specified method name. Arguments are replaced
+		# # with "{?}".
+		# def generate_sequence(method_name)
+		# 	test_sequence(arities[method_name]) { |*args| send(method_name, *args) }
+		# end
+		#
+		# def test_sequence(arity, &block)
+		# 	args = []
+		# 	arity.times { args << '{?}' } if arity
+		# 	begin
+		# 		return block.call(*args)
+		# 	rescue TypeError => err
+		# 		if err.message =~ /\(expected Proc\)/
+		# 			args.pop
+		# 			args << nil
+		# 			retry
+		# 		else
+		# 			raise err
+		# 		end
+		# 	end
+		# end
+
 
 		# Attempts to find an ANSI escape sequence which matches the specified string. The string
 		# is expected to use the notation "{?}" for each parameter instead of a real value. For
 		# instance, the sequence which would return MOVE_UP would look like: "\e[{?}A" instead of
 		# "\e[1A"
-		def recognize(str)
-			match = nil
-			String::ANSI2_ESCAPE_SEQUENCE_RX =~ str
-			if $~ && args = $~[2].split(';')
-				codes.uniq.each do |code|
-					_args = args.dup
-					begin
-						result = code.generate(*_args)
-					rescue TypeError => err
-						if err.message =~ /\(expected Proc\)/ && !_args.empty?
-							_args.pop
-							retry
-						end
-						next
-					end
+		# def recognize(str)
+		# 	match = nil
+		# 	String::ANSI2_ESCAPE_SEQUENCE_RX =~ str
+		# 	if $~ && args = $~[2].split(';')
+		# 		codes.uniq.each do |code|
+		# 			_args = args.dup
+		# 			begin
+		# 				result = code.generate(*_args)
+		# 			rescue TypeError => err
+		# 				if err.message =~ /\(expected Proc\)/ && !_args.empty?
+		# 					_args.pop
+		# 					retry
+		# 				end
+		# 				next
+		# 			end
+		#
+		# 			if result == str
+		# 				match ||= ANSI2::Match.new(_args)
+		# 				match.codes << code
+		# 			end
+		# 		end
+		# 	end
+		# 	return match if match
+		# 	raise "ANSI sequence not found: #{str.inspect}"
+		# end
 
-					if result == str
-						match ||= ANSI2::Match.new(_args)
-						match << code
-					end
-				end
-			end
-			return match if match
-			raise "ANSI sequence not found: #{str.inspect}"
-		end
 
 		# Aliases a specific code with the given names. This way you don't need to redefine a new constant, so performance
 		# is improved a little bit. Note that the code is expected to be an actual instance of ANSI::Code, and not an
 		# arbitrary string.
-		def alias_code(code, *names, &block)
-			code.add_methods! *names
-			delegate_names_for(code, *names, &block)
-		end
+		# def alias_code(code, *names, &block)
+		# 	code.add_methods! *names
+		# 	delegate_names_for(code, *names, &block)
+		# end
 
-		def define(*names, &block)
-			# this just seems like a Really Bad Idea (TM). Let's just let the user create aliases the hard way.
-			#      @cross ||= {}
-			#      code = @cross[test_sequence(block.arity) { |*args| instance_exec(*args, &block) }] ||= ANSI::Code.new(&block)
-			code = ANSI2::Code.new(&block)
-			code.add_methods!(*names)
 
-			#code = ANSI::Code.new(*names, &block)
-			codes << code
-			delegate_names_for(code, *names, &block)
-			code
-		end
+		# def define(*names, &block)
+		# 	code = ANSI2::Code.new names, &block
+		# 	#code.add_methods!(*names)
+		# 	codes << code
+		# 	delegate_names_for(code, *names, &block)
+		# 	code
+		# end
 
-		private
-		def delegate_names_for(code, *names, &block) #:nodoc:
-			code_index = codes.index(code)
-			names.flatten.each do |name|
-				const_name = name.to_s.upcase
-				const_set(const_name, code) unless const_defined?(const_name)
 
-				arities[name] = code.arity
-				if method_defined?(name) && $DEBUG
-					warn "Warning: about to overwrite method #{name}..."
-				end
+		# def define(*names, &block)
+		# 	class_name = names[0].split('_').map(&:capitalize).join
+		# 	aliases = ''
+		#
+		# 	names[1..-1].each do |name|
+		# 		aliases += "alias_method :#{name}, :#{names[0]}\n"
+		# 	end
+		#
+		# 	module_eval <<-END
+		# 		class #{class_name} < Code
+		# 			def #{names[0]}(*args, &block)
+		# 				block.call *args
+		# 			end
+		# 			#{aliases}
+		# 		end
+		# 	END
+		# end
 
-				line = __LINE__ + 1
-				rbcode = <<-end_code
-          def #{name}(*args, &block)                                      # def red(*args, &block)
-            args << block if block_given?                                 #   args << block if block_given?
-            ANSI2.codes[#{code_index}].send(#{name.inspect}, *args)        #   ANSI.code[1].send('red', *args)
-          end                                                             # end
-				end_code
-
-				class_eval rbcode, __FILE__, line
-				ANSI2.instance_eval rbcode
-				@dynamically_defined_methods << name
-			end
-		end
+		# private
+		# def delegate_names_for(code, *names, &block) #:nodoc:
+		# 	code_index = codes.index(code)
+		# 	names.flatten.each do |name|
+		# 		const_name = name.to_s.upcase
+		# 		const_set(const_name, code) unless const_defined?(const_name)
+		#
+		# 		arities[name] = code.arity
+		# 		if method_defined?(name)
+		# 			warn "Warning: about to overwrite method '#{name}'..."
+		# 		end
+		#
+		# 		line = __LINE__ + 1
+		# 		rbcode = <<-end_code
+		# 			def #{name}(*args, &block)										# def red(*args, &block)
+		# 				args << block if block_given?								#   args << block if block_given?
+		# 				ANSI2.codes[#{code_index}].send(#{name.inspect}, *args)		#   ANSI.code[1].send('red', *args)
+		# 			end																# end
+		# 		end_code
+		#
+		# 		class_eval rbcode, __FILE__, line
+		# 		ANSI2.instance_eval rbcode
+		# 		@dynamically_defined_methods << name
+		# 	end
+		# end
 	end
 end
 
-require_relative 'ansi2/version'
-
-require_relative 'ansi2/code'
-require_relative 'ansi2/core_ext/string'
-require_relative 'ansi2/match'
-
-ANSI2.reset!
+::ANSI2.discover_codes if ::ANSI2.codes.length == 0

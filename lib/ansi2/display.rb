@@ -1,3 +1,5 @@
+require_relative 'code'
+
 module ANSI2
 	# Defines ANSI2.codes for changing screen resolution. Sequences with the following names are created:
 	#
@@ -30,25 +32,106 @@ module ANSI2
 	#   unwrap - turns off word wrapping.
 	#
 	module Display
-		ANSI2.define('erase_display', 'clear_display', 'clear', 'cls') { "\e[2J" }
-		ANSI2.define('erase_line', 'clear_line', 'clr') { "\e[K" }
 
-		# Various set and unset/reset methods for display modes.
-		#   set_320x200, unset_320x200, reset_320x200, etc.
-		{'set_' => 'h', '' => 'h', 'unset_' => 'l', 'reset_' => 'l'}.each do |prefix, symbol|
-			ANSI2.define("#{prefix}mode") { |value| "\e[=#{value || 0}#{symbol}" }
+		class EraseDisplay < Code
+			class << self
+				def erase_display
+					"\e[2J"
+				end
 
-			%w(40x25m 40x25 80x25m 80x25 320x200_4 320x200m 640x200m).each_with_index do |mode, index|
-				next if prefix == ""
-				ANSI2.define("#{prefix}#{mode}") { send("#{prefix}mode", index) }
-				# (ie set_40x25m => 0, set_320x200_4 => 4)
-			end
-			%w(320x200 640x200 640x350m 640x350 640x480m 640x480 320x200_256).each_with_index do |mode, index|
-				next if prefix == ""
-				ANSI2.define("#{prefix}#{mode}") { send("#{prefix}mode", index+13) }
+				alias_method :clear_display, :erase_display
+				alias_method :clear, :erase_display
+				alias_method :cls, :erase_display
 			end
 		end
-		ANSI2.define('wrap') { set_mode(7) }
-		ANSI2.define('unwrap') { unset_mode(7) }
+
+
+		class EraseLine < Code
+			class << self
+				def erase_line
+					"\e[K"
+				end
+
+				alias_method :clear_line, :erase_line
+				alias_method :clr, :erase_line
+			end
+		end
+
+
+		class SetMode < Code
+			class << self
+				def set_mode(value = 0)
+					"\e[=#{value}h"
+				end
+				alias_method :mode, :set_mode
+
+			end
+		end
+
+
+		class UnsetMode < Code
+			class << self
+				def unset_mode(value = 0)
+					"\e[=#{value}l"
+				end
+				alias_method :reset_mode, :unset_mode
+			end
+		end
+
+
+		class SetModeSpecifier < SetMode
+			class << self
+				def set_40x25m; set_mode 0; end
+				def set_40x25; set_mode 1; end
+				def set_80x25m; set_mode 2; end
+				def set_80x25; set_mode 3; end
+				def set_320x200_4; set_mode 4; end
+				def set_320x200m; set_mode 5; end
+				def set_640x200m; set_mode 6; end
+				def set_320x200; set_mode 13; end
+				def set_640x200; set_mode 14; end
+				def set_640x350m; set_mode 15; end
+				def set_640x350; set_mode 16; end
+				def set_640x480m; set_mode 17; end
+				def set_640x480; set_mode 18; end
+				def set_320x200_256; set_mode 19; end
+			end
+		end
+
+		class UnsetModeSpecifier < UnsetMode
+			class << self
+				def unset_40x25m; unset_mode 0; end
+				def unset_40x25; unset_mode 1; end
+				def unset_80x25m; unset_mode 2; end
+				def unset_80x25; unset_mode 3; end
+				def unset_320x200_4; unset_mode 4; end
+				def unset_320x200m; unset_mode 5; end
+				def unset_640x200m; unset_mode 6; end
+				def unset_320x200; unset_mode 13; end
+				def unset_640x200; unset_mode 14; end
+				def unset_640x350m; unset_mode 15; end
+				def unset_640x350; unset_mode 16; end
+				def unset_640x480m; unset_mode 17; end
+				def unset_640x480; unset_mode 18; end
+				def unset_320x200_256; unset_mode 19; end
+			end
+		end
+
+		class Wrap < SetMode
+			class << self
+				def wrap
+					set_mode 7
+				end
+			end
+		end
+
+
+		class Unwrap < UnsetMode
+			class << self
+				def unwrap
+					unset_mode 7
+				end
+			end
+		end
 	end
 end

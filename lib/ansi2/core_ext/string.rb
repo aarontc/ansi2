@@ -1,5 +1,6 @@
 require_relative 'regexp'
 require_relative '../../ansi2'
+require_relative '../color'
 
 class String
 	prefix = "[]?><()#/"
@@ -8,7 +9,7 @@ class String
 	# returns an array listing all detected ANSI sequences in self. These are instances of ANSI::Code.
 	def ansi_sequences
 		ANSI2_ESCAPE_SEQUENCE_RX.each_match(self).collect do |match|
-			ANSI2.recognize(match[0])
+			ANSI2.recognize match[0]
 		end
 	end
 
@@ -25,7 +26,7 @@ class String
 	#   end
 	#   #=> "(red)hello(normal)"
 	#
-	def replace_ansi
+	def ansi_replace
 		copy = self.dup
 		ANSI2_ESCAPE_SEQUENCE_RX.each_match(copy).collect do |match|
 			ansi_match = ANSI2.recognize match[0]
@@ -34,4 +35,14 @@ class String
 		end
 		copy
 	end
+
+
+	def fg_black
+		ANSI2.fg_black { self }
+	end
+
+	def fg_red
+		ANSI2.fg_red { self }
+	end
+	alias_method :red, :fg_red
 end

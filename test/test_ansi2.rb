@@ -3,10 +3,6 @@ require_relative 'test_helper'
 require_relative '../lib/ansi2'
 
 class TestANSI2 < Minitest::Test
-	def setup
-		ANSI.reset!
-	end
-
 	def test_works_for_blink
 		actual = ANSI2.generate_sequence 'blink'
 		assert_equal "\e[5m", actual

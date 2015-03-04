@@ -1,7 +1,7 @@
 require_relative '../test_helper'
 
 class TestColor < Minitest::Test
-	include ANSI2
+	#include ANSI2
 
 	def test_wrap_single_fg_color_string_using_block
 		assert_equal ANSI2.red + 'a string!' + ANSI2.reset_color, ANSI2.red { 'a string!' }
@@ -11,9 +11,6 @@ class TestColor < Minitest::Test
 		assert_equal ANSI2.red + 'a string!' + ANSI2.reset_color, 'a string!'.red
 	end
 
-	def test_add_single_fg_color_to_symbol
-		assert_equal red + 'a_string!' + reset_color, :a_string!.red
-	end
 
 	# context "a single attribute color" do
 	# 	it "should wrap a string using a block" do
